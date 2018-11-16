@@ -1,0 +1,66 @@
+#include <bits/stdc++.h>
+#define ll long long
+#define mod 1000000007
+using namespace std;
+
+int n,a[100100],q,l,r;
+int seg[200100];
+
+void upd(int val,int ind,int x,int y,int pos){
+    //if x==y you are on position of a[pos]
+    if (x==y){
+        seg[ind]=a[x];
+        return;
+    }
+    //Correct order x--pos--y, otherwise return
+    //because pos doesn't belong to this segment
+    if (x>pos or y<pos)return;
+
+    int mid=(x+y)/2;
+
+    upd(val,ind*2,x,mid,pos);
+    upd(val,ind*2+1,mid+1,y,pos);
+
+    //seg[ind] is minimum of its child nodes
+    seg[ind]=min(seg[ind*2],seg[ind*2+1]);
+}
+
+int calc(int ind,int x,int y,int l,int r){
+    //correct order for continuing segment tree:
+    //l--x--y--r
+    if (x>r or y<l)return 1e9;
+    
+    //If [x,y] is under [l,r] return whole segment
+    if (x>=l and y<=r)return seg[ind];
+
+    //else traverse until [x,y] is under [l,r]
+    
+    int mid=(x+y)/2;
+    return min(calc(ind*2,x,mid,l,r),
+               calc(ind*2+1,mid+1,y,l,r));
+}
+
+void initialize_seg(){
+    //setup segment tree to maximum so that update will have minimum elements inserted
+    for (int i=0;i<200100;i++)seg[i]=INT_MAX;
+}
+
+int main(){
+    //ios::sync_with_stdio(false);cin.tie(0);cout.tie(0);
+    intialize_seg();
+
+    cin>>n>>q;
+    //input and update
+    for (int i=0;i<n;i++){
+        cin>>a[i];
+        upd(a[i],1,0,n-1,i);
+    }
+    
+    //query and output
+    while(q--){
+        cin>>l>>r;
+        l--,r--;
+        cout<<calc(1,0,n-1,l,r)<<"\n";
+    }
+    return 0;
+}
