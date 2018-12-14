@@ -1,0 +1,134 @@
+#include <bits/stdc++.h>
+
+#define ll long long
+#define ios ios::sync_with_stdio(false);cin.tie(0);cout.tie(0);
+
+using namespace std;
+
+int n,q,br;
+int d[100100],cenpar[100100],cendep[100100],ans[100100];
+int lca[100100][18],parent[100100],level[100100];
+bool ch[100100];
+vector<int>v[100100];
+
+void dfs(int s,int prev){
+    br++;
+    d[s]=1;
+    for (auto i:v[s]){
+        if (ch[i] or i==prev)continue;
+        dfs(i,s);
+        d[s]+=d[i];
+    }
+}
+
+int getcen(int s,int prev){
+    for (auto i:v[s]){
+        if (i==prev or ch[i])continue;
+        if (d[i]>br/2)return getcen(i,s);
+    }
+    return s;
+}
+
+int decompose(int s,int dep,int prev){
+    br=0;
+    dfs(s,-1);
+    s=getcen(s,-1);
+    ch[s]=true;
+    cendep[s]=dep;
+    cenpar[s]=prev;
+
+    for (auto i:v[s]){
+        if (ch[i])continue;
+        int k=decompose(i,dep+1,s);
+    }
+    return s;
+}
+
+//done - w->cenpar,cendep
+
+void build_par(int s,int prev,int lvl){
+    parent[s]=prev;
+    level[s]=lvl;
+    for (auto i:v[s]){
+        if (i==prev)continue;
+        build_par(i,s,lvl+1);
+    }
+}
+void build_lca(){
+    build_par(1,-1,0);
+    for (int i=1;i<=n;i++){
+        lca[i][0]=parent[i];
+        for (int j=1;j<=log2(n);j++){
+            lca[i][j]=-1;
+        }
+    }
+    for (int j=1;j<=log2(n);j++){
+        for (int i=1;i<=n;i++){
+            if (lca[i][j-1]==-1)continue;
+            lca[i][j]=lca[lca[i][j-1]][j-1];
+        }
+    }
+}
+
+int find_lca(int a,int b){
+    if (a==b)return a;
+    if (level[a]>level[b])swap(a,b);
+
+    int k=level[b]-level[a];
+    while(level[a]!=level[b]){
+        int dist=level[b]-level[a];
+        int pow=log2(dist);
+        b=lca[b][pow];
+    }
+    if (a==b)return a;
+    for (int j=log2(n);j>=0;j--){
+        if (lca[a][j]!=lca[b][j] and lca[a][j]!=-1 and lca[b][j]!=-1){
+            a=lca[a][j];
+            b=lca[b][j];
+        }
+    }
+    return parent[a];
+}
+void Set(int s){
+    int p=s;
+    while(p!=-1){
+        int c=find_lca(s,p);
+        c=level[s]+level[p]-2*level[c];
+        ans[p]=min(ans[p],c);
+        p=cenpar[p];
+    }
+}
+
+int query(int s){
+    int p=s,rez=1e9;
+    while(p!=-1){
+        int c=find_lca(s,p);
+        c=level[s]+level[p]-2*level[c];
+        rez=min(rez,c+ans[p]);
+        p=cenpar[p];
+    }
+    return rez;
+}
+
+int main(){
+    ios;
+    for (int i=0;i<100100;i++)ans[i]=1e9;
+    cin>>n>>q;
+    for (int i=0;i<n-1;i++){
+        int a,b;
+        cin>>a>>b;
+        v[a].push_back(b);
+        v[b].push_back(a);
+    }
+    decompose(1,0,-1);
+    build_lca();
+    Set(1);
+    while(q--){
+        int t,x;
+        cin>>t>>x;
+        if (t==1)Set(x);
+        else cout<<query(x)<<"\n";
+    }
+
+    return 0;
+}
