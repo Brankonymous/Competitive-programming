@@ -1,0 +1,64 @@
+#include <bits/stdc++.h>
+
+#define ll long long
+#define ios ios::sync_with_stdio(false);cin.tie(0);cout.tie(0);
+
+using namespace std;
+
+int n,q,br;
+int d[100100],cenpar[100100],cendep[100100];
+bool ch[100100];
+vector<int>v[100100];
+
+//find subtree size (br) and size of all child nodes from s(not including other centroids)
+void dfs(int s,int prev){
+    br++;
+    d[s]=1;
+    for (auto i:v[s]){
+        if (ch[i] or i==prev)continue;
+        dfs(i,s);
+        d[s]+=d[i];
+    }
+}
+
+//find centroid
+int getcen(int s,int prev){
+    for (auto i:v[s]){
+        if (i==prev or ch[i])continue;
+        //if size of subtree from i contains n/2 centroid is surely on subtree with node i
+        if (d[i]>br/2)return getcen(i,s);
+    }
+    return s;
+}
+
+int decompose(int s,int dep,int prev){
+    br=0;
+    //find subtree sizes
+    dfs(s,-1);
+    //find centroid
+    s=getcen(s,-1);
+    
+    //after we find centroid s, check that we visited it, mark its depth and parent
+    ch[s]=true;
+    cendep[s]=dep;
+    cenpar[s]=prev;
+
+    //find other centroids
+    for (auto i:v[s]){
+        if (ch[i])continue;
+        int k=decompose(i,dep+1,s);
+    }
+    return s;
+}
+
+int main(){
+    cin>>n;
+    for (int i=0;i<n-1;i++){
+        int a,b;
+        cin>>a>>b;
+        v[a].push_back(b);
+        v[b].push_back(a);
+    }
+    decompose(1,0,-1);
+    return 0;
+}
