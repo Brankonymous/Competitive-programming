@@ -1,0 +1,87 @@
+//https://www.spoj.com/problems/HORRIBLE/
+
+#include <bits/stdc++.h>
+ 
+#define ios ios::sync_with_stdio(false);cin.tie(0);cout.tie(0);
+#define fi first
+#define se second
+#define pb push_back
+#define all(x) (x).begin(), (x).end()
+#define rall(x) (x).rbegin(), (x).rend()
+#define for0(i, n) for (int i = 0; i < (int)(n); ++i)
+#define for1(i, n) for (int i = 1; i <= (int)(n); ++i)
+#define ford(i, n) for (int i = (int)(n) - 1; i >= 0; --i)
+#define fore(i, a, b) for (int i = (int)(a); i <= (int)(b); ++i)
+#define ll long long
+#define mod 1000000007
+ 
+using namespace std;
+ 
+int t,n,q;
+ll seg[400100],lazy[400100];
+ 
+void add(int x,int y,int l,int r,ll val,int ind){
+    if (lazy[ind]){
+        seg[ind]+=lazy[ind]*(y-x+1);
+        if (x!=y){
+            lazy[ind*2]+=lazy[ind];
+            lazy[ind*2+1]+=lazy[ind];
+        }
+        lazy[ind]=0;
+    }
+    if (x>r or y<l)return;
+    if ((x>=l and y<=r) or x==y){
+        seg[ind]+=val*(y-x+1);
+        if (x!=y){
+            lazy[ind*2]+=val;
+            lazy[ind*2+1]+=val;
+        }
+        return;
+    }
+    int mid=(x+y)/2;
+    add(x,mid,l,r,val,ind*2);
+    add(mid+1,y,l,r,val,ind*2+1);
+    seg[ind]=seg[ind*2]+seg[ind*2+1];
+}
+ 
+ll calc(int x,int y,int l,int r,int ind){
+    if (lazy[ind]){
+        seg[ind]+=lazy[ind]*(y-x+1);
+        if (x!=y){
+            lazy[2*ind]+=lazy[ind];
+            lazy[2*ind+1]+=lazy[ind];
+        }
+        lazy[ind]=0;
+    }
+    if (x>r or y<l)return 0;
+    if ((x>=l and y<=r) or x==y)return seg[ind];
+    int mid=(x+y)/2;
+    return calc(x,mid,l,r,ind*2)+calc(mid+1,y,l,r,ind*2+1);
+}
+ 
+int main(){
+    ios;
+    cin>>t;
+    while(t--){
+        memset(seg,0,sizeof(seg));
+        memset(lazy,0,sizeof(lazy));
+        cin>>n>>q;
+        while(q--){
+            int c;
+            cin>>c;
+            if (c==0){
+                int p,q;
+                ll v;
+                cin>>p>>q>>v;
+                add(1,n,p,q,v,1);
+            }
+            else{
+                int p,q;
+                cin>>p>>q;
+                cout<<calc(1,n,p,q,1)<<"\n";
+            }
+            //for (int i=1;i<=n*2-1;i++)cout<<i<<" "<<seg[i]<<"\n";
+        }
+    }
+    return 0;
+}
